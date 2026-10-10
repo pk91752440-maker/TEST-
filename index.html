@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>주식 수익률 계산기 | Stock Yield Calculator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter & Pretendard Font -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <style>
+    body {
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-indigo-500 selection:text-white">
+
+  <div class="w-full max-w-xl bg-slate-800/90 border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-xl p-6 sm:p-8 space-y-6">
+    <!-- Header -->
+    <header class="flex items-center justify-between pb-4 border-b border-slate-700/60">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 font-bold">
+            📈
+          </span>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">주식 수익률 계산기</h1>
+        </div>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">매수가, 매도가 및 수수료·세금을 반영한 순손익을 산출합니다.</p>
+      </div>
+      <button id="reset-btn" type="button" class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-750 hover:bg-slate-700 border border-slate-600/60 rounded-lg transition-colors duration-150 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        초기화
+      </button>
+    </header>
+
+    <div class="space-y-4">
+      <!-- 매수가 (평단가) -->
+      <div>
+        <label for="buy-price" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+          매수 단가 (원)
+        </label>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="buy-price" 
+            placeholder="0" 
+            class="w-full bg-slate-900/90 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-slate-100 rounded-xl px-4 py-3 text-right font-mono text-lg font-semibold tracking-wide transition-all outline-none"
+          >
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">₩</span>
+        </div>
+      </div>
+
+      <!-- 보유 수량 -->
+      <div>
+        <label for="quantity" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+          보유 수량 (주)
+        </label>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="quantity" 
+            placeholder="0" 
+            class="w-full bg-slate-900/90 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-slate-100 rounded-xl px-4 py-3 text-right font-mono text-lg font-semibold tracking-wide transition-all outline-none"
+          >
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">Qty</span>
+        </div>
+      </div>
+
+      <!-- 매도가 (목표가) -->
+      <div>
+        <label for="sell-price" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+          매도 단가 (원)
+        </label>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="sell-price" 
+            placeholder="0" 
+            class="w-full bg-slate-900/90 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-slate-100 rounded-xl px-4 py-3 text-right font-mono text-lg font-semibold tracking-wide transition-all outline-none"
+          >
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">₩</span>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-700/60">
+        <button 
+          id="toggle-fee-btn" 
+          type="button" 
+          class="flex items-center justify-between w-full py-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+        >
+          <span class="flex items-center gap-1.5 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            수수료 및 거래세율 설정
+          </span>
+          <span id="fee-arrow" class="text-xs transition-transform duration-200">▼</span>
+        </button>
+
+        <div id="fee-panel" class="grid grid-cols-2 gap-3 mt-3 hidden">
+          <div>
+            <label for="fee-rate" class="block text-[11px] text-slate-400 mb-1">
+              증권사 수수료율 (매수/매도 각 %)
+            </label>
+            <input 
+              type="number" 
+              id="fee-rate" 
+              step="0.001" 
+              value="0.015" 
+              class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg px-3 py-2 text-right font-mono text-sm text-slate-200 outline-none"
+            >
+          </div>
+          <div>
+            <label for="tax-rate" class="block text-[11px] text-slate-400 mb-1">
+              증권거래세율 (매도 시 %)
+            </label>
+            <input 
+              type="number" 
+              id="tax-rate" 
+              step="0.01" 
+              value="0.18" 
+              class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg px-3 py-2 text-right font-mono text-sm text-slate-200 outline-none"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-slate-900/80 border border-slate-700/60 rounded-xl p-5 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-700/50 gap-2">
+        <div>
+          <span class="text-xs uppercase tracking-wide text-slate-400">예상 실현 손익</span>
+          <div id="profit-amount" class="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-slate-300">
+            0 원
+          </div>
+        </div>
+        <div class="sm:text-right">
+          <span class="text-xs uppercase tracking-wide text-slate-400">최종 수익률</span>
+          <div id="profit-rate" class="text-2xl sm:text-3xl font-black tracking-tight font-mono text-slate-300">
+            0.00 %
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+        <div class="bg-slate-800/80 rounded-lg p-2.5 border border-slate-700/40">
+          <span class="text-slate-400 block mb-1">총 매수 금액</span>
+          <span id="total-buy" class="font-mono font-semibold text-slate-200">0 원</span>
+        </div>
+        <div class="bg-slate-800/80 rounded-lg p-2.5 border border-slate-700/40">
+          <span class="text-slate-400 block mb-1">총 매도 금액</span>
+          <span id="total-sell" class="font-mono font-semibold text-slate-200">0 원</span>
+        </div>
+        <div class="bg-slate-800/80 rounded-lg p-2.5 border border-slate-700/40">
+          <span class="text-slate-400 block mb-1">총 제비용 (세금+수수료)</span>
+          <span id="total-fees" class="font-mono font-semibold text-slate-300">0 원</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Note -->
+    <div class="text-[11px] text-slate-500 text-center">
+      * 수수료와 세금은 소수점 절사 등 증권사 정산 방식에 따라 실제 내역과 약간의 차이가 발생할 수 있습니다.
+    </div>
+  </div>
+
+  <script>
+    // Elements
+    const buyPriceInput = document.getElementById('buy-price');
+    const quantityInput = document.getElementById('quantity');
+    const sellPriceInput = document.getElementById('sell-price');
+    const feeRateInput = document.getElementById('fee-rate');
+    const taxRateInput = document.getElementById('tax-rate');
+
+    const totalBuyEl = document.getElementById('total-buy');
+    const totalSellEl = document.getElementById('total-sell');
+    const totalFeesEl = document.getElementById('total-fees');
+    const profitAmountEl = document.getElementById('profit-amount');
+    const profitRateEl = document.getElementById('profit-rate');
+
+    const toggleFeeBtn = document.getElementById('toggle-fee-btn');
+    const feePanel = document.getElementById('fee-panel');
+    const feeArrow = document.getElementById('fee-arrow');
+    const resetBtn = document.getElementById('reset-btn');
+
+    // Utility: Parse formatted string to number
+    function parseNumber(val) {
+      if (!val) return 0;
+      const clean = val.toString().replace(/,/g, '').trim();
+      const num = parseFloat(clean);
+      return isNaN(num) ? 0 : num;
+    }
+
+    // Utility: Format number with commas
+    function formatNumber(num) {
+      return Math.round(num).toLocaleString('ko-KR');
+    }
+
+    // Format input with thousand separators while typing
+    function handleNumberInput(e) {
+      const input = e.target;
+      const rawVal = input.value.replace(/[^0-9]/g, '');
+      if (rawVal === '') {
+        input.value = '';
+      } else {
+        input.value = Number(rawVal).toLocaleString('ko-KR');
+      }
+      calculate();
+    }
+
+    // Main calculation logic
+    function calculate() {
+      const buyPrice = parseNumber(buyPriceInput.value);
+      const quantity = parseNumber(quantityInput.value);
+      const sellPrice = parseNumber(sellPriceInput.value);
+      const feeRate = parseFloat(feeRateInput.value) || 0; // %
+      const taxRate = parseFloat(taxRateInput.value) || 0; // %
+
+      if (buyPrice === 0 || quantity === 0) {
+        totalBuyEl.textContent = '0 원';
+        totalSellEl.textContent = '0 원';
+        totalFeesEl.textContent = '0 원';
+        profitAmountEl.textContent = '0 원';
+        profitRateEl.textContent = '0.00 %';
+        profitAmountEl.className = 'text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-slate-300';
+        profitRateEl.className = 'text-2xl sm:text-3xl font-black tracking-tight font-mono text-slate-300';
+        return;
+      }
+
+      const totalBuy = buyPrice * quantity;
+      const totalSell = sellPrice * quantity;
+
+      // Fees & Taxes calculation
+      // Buy commission
+      const buyFee = Math.floor(totalBuy * (feeRate / 100));
+      // Sell commission
+      const sellFee = Math.floor(totalSell * (feeRate / 100));
+      // Securities transaction tax (applies on sell amount)
+      const sellTax = Math.floor(totalSell * (taxRate / 100));
+
+      const totalFees = buyFee + sellFee + sellTax;
+      const netProfit = totalSell - totalBuy - totalFees;
+      const yieldRate = totalBuy > 0 ? (netProfit / totalBuy) * 100 : 0;
+
+      // Update UI texts
+      totalBuyEl.textContent = formatNumber(totalBuy) + ' 원';
+      totalSellEl.textContent = formatNumber(totalSell) + ' 원';
+      totalFeesEl.textContent = formatNumber(totalFees) + ' 원';
+
+      const sign = netProfit > 0 ? '+' : '';
+      profitAmountEl.textContent = `${sign}${formatNumber(netProfit)} 원`;
+      profitRateEl.textContent = `${sign}${yieldRate.toFixed(2)} %`;
+
+      // Update color styles according to profit/loss
+      if (netProfit > 0) {
+        // Red for gain (한국 증시 관례: 상승/수익 = 빨강)
+        profitAmountEl.className = 'text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-rose-400';
+        profitRateEl.className = 'text-2xl sm:text-3xl font-black tracking-tight font-mono text-rose-400';
+      } else if (netProfit < 0) {
+        // Blue for loss
+        profitAmountEl.className = 'text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-blue-400';
+        profitRateEl.className = 'text-2xl sm:text-3xl font-black tracking-tight font-mono text-blue-400';
+      } else {
+        profitAmountEl.className = 'text-2xl sm:text-3xl font-extrabold tracking-tight font-mono text-slate-300';
+        profitRateEl.className = 'text-2xl sm:text-3xl font-black tracking-tight font-mono text-slate-300';
+      }
+    }
+
+    // Input listeners
+    buyPriceInput.addEventListener('input', handleNumberInput);
+    quantityInput.addEventListener('input', handleNumberInput);
+    sellPriceInput.addEventListener('input', handleNumberInput);
+    feeRateInput.addEventListener('input', calculate);
+    taxRateInput.addEventListener('input', calculate);
+
+    // Toggle advanced fee settings
+    toggleFeeBtn.addEventListener('click', () => {
+      const isHidden = feePanel.classList.toggle('hidden');
+      feeArrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+
+    // Reset button
+    resetBtn.addEventListener('click', () => {
+      buyPriceInput.value = '';
+      quantityInput.value = '';
+      sellPriceInput.value = '';
+      calculate();
+    });
+
+    // Initial run
+    calculate();
+  </script>
+</body>
+</html>
